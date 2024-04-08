@@ -1,9 +1,9 @@
 import { Request, Response } from 'express'
-import { RegisterDto } from '../../domain'
+import { AuthRepository, RegisterDto } from '../../domain'
 
 export class AuthController {
   // DI
-  constructor() {}
+  constructor(private readonly authRepository: AuthRepository) {}
 
   loginUser = (req: Request, res: Response) => {
     res.json({ message: 'Login' })
@@ -16,6 +16,9 @@ export class AuthController {
       return res.status(400).json({ error })
     }
 
-    res.json(registerDto)
+    this.authRepository
+      .register(registerDto!)
+      .then(user => res.json(user))
+      .catch(error => res.status(500).json({ error }))
   }
 }
