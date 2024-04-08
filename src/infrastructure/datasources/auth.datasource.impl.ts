@@ -6,6 +6,7 @@ import {
   RegisterDto,
   UserEntity
 } from '../../domain'
+import { UserMapper } from '../mappers/user.mapper'
 
 type HashFunction = (password: string) => string
 type CompareFunction = (password: string, hashedPassword: string) => boolean
@@ -24,19 +25,17 @@ export class AuthDataSourceImpl implements AuthDataSource {
       const exists = await UserModel.findOne({ email })
       if (exists) throw CustomError.badRequest('Email already exists')
 
+      // hash the password
       const user = await UserModel.create({
         name,
         email,
         password: this.hashPassword(password)
       })
 
-      // hash the password
-
       await user.save()
 
       // map the data to the entity
-      // todo: mapper
-      return new UserEntity(user.id, name, email, password, user.roles)
+      return UserMapper.userEntityFromObject(user)
     } catch (error) {
       if (error instanceof CustomError) {
         throw error
