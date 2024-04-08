@@ -17,6 +17,9 @@ export class Server {
   }
 
   async start() {
+    // use middleware
+    this.app.use(express.json())
+
     // use routes
     this.app.use(this.routes)
 
