@@ -6,6 +6,7 @@ import {
   RegisterDto,
   UserEntity
 } from '../../domain'
+import { LoginDto } from '../../domain/dtos/auth/login.dto'
 import { UserMapper } from '../mappers/user.mapper'
 
 type HashFunction = (password: string) => string
@@ -16,6 +17,25 @@ export class AuthDataSourceImpl implements AuthDataSource {
     private readonly hashPassword: HashFunction = BcryptAdapter.hash,
     private readonly comparePassword: CompareFunction = BcryptAdapter.compare
   ) {}
+
+  async login(loginDto: LoginDto): Promise<UserEntity> {
+    const { email, password } = loginDto
+
+    try {
+      const exists = await UserModel.findOne({ email })
+      if (!exists) throw CustomError.badRequest('Check credentials')
+
+      const isMatch = this.comparePassword(password, exists.password)
+      if (!isMatch) throw CustomError.badRequest('Check credentials')
+
+      return UserMapper.userEntityFromObject(exists)
+    } catch (error) {
+      if (error instanceof CustomError) {
+        throw error
+      }
+      throw CustomError.internalServer()
+    }
+  }
 
   async register(registerDto: RegisterDto): Promise<UserEntity> {
     const { name, email, password } = registerDto
